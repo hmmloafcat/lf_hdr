@@ -13,7 +13,7 @@ Headers for game development in C++ using GLFW. These are NOT single-headers, bu
 
 Libraries:
 
-EzAudio: Still in development... :)
+EzAudio
 
 EzImg: Still in development... :)
 
