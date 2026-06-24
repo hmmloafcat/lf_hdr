@@ -1,6 +1,6 @@
 # lf_hdr
 
-Headers for game development in C++ using GLFW. These are NOT single-headers, but need other libraries!
+Headers for game development in C++ using GLFW. These header files need other dependencies to work
 
 ## Credits:
 
@@ -9,9 +9,9 @@ Headers for game development in C++ using GLFW. These are NOT single-headers, bu
 - dr_libs
    - Libraries for audio playing (dr_mp3, dr_flac, and dr_wav)
 - stb
-  - Same for audio playing, but with OGG Vorbis
+  - Same for audio playing, (stb_vorbis) but with OGG Vorbis
 
-### For EzImage
+### For EzImage:
 
 - stb
   - Decoding with stb_image.h. No extra libraries used.
@@ -28,9 +28,9 @@ EzParticles: *Still in development... :)*
 
 ## Notes
 
-EzImage Note #1: ***EzImage works only for GLFW***
+EzImage Note #1: ***EzImage is only compatible with GLFW***
 
-EzParticles Note #1: ***EzParticles works only for GLFW***
+EzParticles Note #1: ***EzParticles isn't released yet, but it's only compatible with GLFW***
 
 ---
 
