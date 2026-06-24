@@ -6,25 +6,25 @@ Headers for game development in C++ using GLFW. These header files need other de
 
 ### For EzAudio:
 
-- dr_libs
+- [dr_libs](https://github.com/mackron/dr_libs)
    - Libraries for audio playing (dr_mp3, dr_flac, and dr_wav)
-- stb
+- [stb](https://github.com/nothings/stb)
   - Same for audio playing, (stb_vorbis) but with OGG Vorbis
 
 ### For EzImage:
 
-- stb
+- [stb](https://github.com/nothings/stb)
   - Decoding with stb_image.h. No extra libraries used.
 
 ---
 
 Libraries:
 
-EzAudio
+1. EzAudio
 
-EzImage
+2. EzImage
 
-EzParticles: *Still in development... :)*
+3. EzParticles: *Still in development... :)*
 
 ## Notes
 
