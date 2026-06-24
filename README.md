@@ -14,7 +14,11 @@ Headers for game development in C++ using GLFW. These are NOT single-headers, bu
 Libraries:
 
 EzAudio: Still in development... :)
+
 EzImg: Still in development... :)
+
 EzParticles: Still in development... :)
+
+---
 
 Made by Loaf ❤️
