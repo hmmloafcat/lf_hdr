@@ -6,8 +6,11 @@ EzAudio is a small library to play audio easily with almost no hassle
 
 Supports:
 OGG
+
 MP3
+
 FLAC
+
 WAV
 
 Example:
