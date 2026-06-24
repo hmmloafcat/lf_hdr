@@ -6,8 +6,24 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <algorithm>
+#include <cctype>
 
 // --- Public Interface ---
+
+class Sound {
+public:
+    ALuint buffer = 0;
+    bool loop = false;
+    bool paused = false;
+    float volume = 1.0f;
+    float pan = 0.0f;
+    float speed = 1.0f;
+    float start = 0.0f;
+
+    Sound() = default;
+    Sound(ALuint buf) : buffer(buf) {}
+};
 
 class EzAudio {
 public:
@@ -19,8 +35,8 @@ public:
     void shutdown();
 
     // Audio control
-    ALuint loadSound(const std::string& filepath);
-    void playSound(ALuint buffer, bool loop = false);
+    Sound loadSound(const std::string& filepath);
+    ALuint playSound(const Sound& sound);
     void stopAll();
 
 private:
@@ -90,7 +106,7 @@ void EzAudio::shutdown() {
     if (device) alcCloseDevice(device);
 }
 
-ALuint EzAudio::loadSound(const std::string& filepath) {
+Sound EzAudio::loadSound(const std::string& filepath) {
     ALenum format;
     ALsizei sampleRate;
     std::vector<int16_t> pcmData;
@@ -100,6 +116,8 @@ ALuint EzAudio::loadSound(const std::string& filepath) {
     size_t dotIdx = filepath.find_last_of(".");
     if (dotIdx != std::string::npos) {
         ext = filepath.substr(dotIdx + 1);
+        // Standardize extension strings to lowercase (Fixes issues like .WAV)
+        std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
     }
 
     // Decode WAV
@@ -109,7 +127,7 @@ ALuint EzAudio::loadSound(const std::string& filepath) {
         drwav_uint64 totalPCMFrameCount;
         int16_t* pSampleData = drwav_open_file_and_read_pcm_frames_s16(filepath.c_str(), &channels, &sampleRateRaw, &totalPCMFrameCount, nullptr);
         
-        if (!pSampleData) return 0;
+        if (!pSampleData) return Sound(0);
         
         pcmData.assign(pSampleData, pSampleData + (totalPCMFrameCount * channels));
         format = (channels == 2) ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16;
@@ -122,7 +140,7 @@ ALuint EzAudio::loadSound(const std::string& filepath) {
         drmp3_uint64 totalPCMFrameCount;
         drmp3_int16* pSampleData = drmp3_open_file_and_read_pcm_frames_s16(filepath.c_str(), &config, &totalPCMFrameCount, nullptr);
         
-        if (!pSampleData) return 0;
+        if (!pSampleData) return Sound(0);
         
         pcmData.assign(pSampleData, pSampleData + (totalPCMFrameCount * config.channels));
         format = (config.channels == 2) ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16;
@@ -136,7 +154,7 @@ ALuint EzAudio::loadSound(const std::string& filepath) {
         drflac_uint64 totalPCMFrameCount;
         int16_t* pSampleData = drflac_open_file_and_read_pcm_frames_s16(filepath.c_str(), &channels, &sampleRateRaw, &totalPCMFrameCount, nullptr);
         
-        if (!pSampleData) return 0;
+        if (!pSampleData) return Sound(0);
         
         pcmData.assign(pSampleData, pSampleData + (totalPCMFrameCount * channels));
         format = (channels == 2) ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16;
@@ -150,7 +168,7 @@ ALuint EzAudio::loadSound(const std::string& filepath) {
         short* pSampleData;
         int samples = stb_vorbis_decode_filename(filepath.c_str(), &channels, &sampleRateRaw, &pSampleData);
         
-        if (samples <= 0) return 0;
+        if (samples <= 0) return Sound(0);
         
         pcmData.assign(pSampleData, pSampleData + (samples * channels));
         format = (channels == 2) ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16;
@@ -159,7 +177,7 @@ ALuint EzAudio::loadSound(const std::string& filepath) {
     }
     else {
         std::cerr << "[EzAudio] Unsupported format: " << ext << "\n";
-        return 0;
+        return Sound(0);
     }
 
     // Upload PCM data to OpenAL buffer
@@ -168,11 +186,11 @@ ALuint EzAudio::loadSound(const std::string& filepath) {
     alBufferData(buffer, format, pcmData.data(), pcmData.size() * sizeof(int16_t), sampleRate);
     
     buffers.push_back(buffer);
-    return buffer;
+    return Sound(buffer);
 }
 
-void EzAudio::playSound(ALuint buffer, bool loop) {
-    if (buffer == 0) return;
+ALuint EzAudio::playSound(const Sound& sound) {
+    if (sound.buffer == 0) return 0;
 
     // Find an idle source or generate a new one
     ALuint source = 0;
@@ -190,10 +208,30 @@ void EzAudio::playSound(ALuint buffer, bool loop) {
         sources.push_back(source);
     }
 
-    // Bind buffer to source and play
-    alSourcei(source, AL_BUFFER, buffer);
-    alSourcei(source, AL_LOOPING, loop ? AL_TRUE : AL_FALSE);
-    alSourcePlay(source);
+    // Bind buffer to source and process loop setting
+    alSourcei(source, AL_BUFFER, sound.buffer);
+    alSourcei(source, AL_LOOPING, sound.loop ? AL_TRUE : AL_FALSE);
+    
+    // Apply requested volume and speed (pitch) parameters
+    alSourcef(source, AL_GAIN, sound.volume);
+    alSourcef(source, AL_PITCH, sound.speed);
+    
+    // Process panning. Setting source strictly relative to listener limits variables 
+    alSourcei(source, AL_SOURCE_RELATIVE, AL_TRUE);
+    alSource3f(source, AL_POSITION, sound.pan, 0.0f, 0.0f);
+
+    // Apply specific start offset
+    if (sound.start > 0.0f) {
+        alSourcef(source, AL_SEC_OFFSET, sound.start);
+    }
+
+    // Engage playback immediately unless starting paused
+    if (!sound.paused) {
+        alSourcePlay(source);
+    }
+
+    // Return the source so the user can issue an alSourcePlay(source) later if they used the paused property
+    return source;
 }
 
 void EzAudio::stopAll() {
