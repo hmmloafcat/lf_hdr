@@ -202,4 +202,4 @@ void EzAudio::stopAll() {
     }
 }
 
-#endif
+#endif  // EZ_AUDIO_IMPLEMENTATION
