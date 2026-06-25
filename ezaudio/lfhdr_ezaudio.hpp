@@ -58,7 +58,9 @@ private:
 #include "dr_flac.h"
 #define DR_WAV_IMPLEMENTATION
 #include "dr_wav.h"
-#define STB_VORBIS_HEADER_ONLY
+
+// stb_vorbis displays linker errors
+// So, the implementation will be removed
 #include "stb_vorbis.c"
 
 EzAudio::EzAudio() {}
