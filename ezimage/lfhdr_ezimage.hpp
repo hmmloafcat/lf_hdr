@@ -88,9 +88,8 @@ EzImageManager::~EzImageManager() {
 
 EzImage* EzImageManager::loadImage(const std::string& filepath) {
     int width, height, channels;
-    
-    // Flip loaded texture on y-axis by default for OpenGL standard coordinate mapping
-    stbi_set_flip_vertically_on_load(true);
+
+    stbi_set_flip_vertically_on_load(false);
     
     // Force 4 channels (RGBA) to gracefully handle PNG alpha channels automatically
     unsigned char* data = stbi_load(filepath.c_str(), &width, &height, &channels, 4); 
